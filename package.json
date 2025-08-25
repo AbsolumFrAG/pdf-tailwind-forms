@@ -1,0 +1,70 @@
+{
+  "name": "pdf-tailwind-forms",
+  "version": "1.0.1",
+  "description": "TypeScript Node.js library for generating PDFs with AcroForms and TailwindCSS support",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "prepublishOnly": "pnpm run build",
+    "example:simple": "pnpx tsx examples/simple-example.ts",
+    "example:comprehensive": "pnpx tsx examples/comprehensive-form.ts",
+    "examples": "pnpm run example:simple && pnpm run example:comprehensive"
+  },
+  "keywords": [
+    "pdf",
+    "forms",
+    "acroforms",
+    "tailwindcss",
+    "typescript",
+    "pdf-lib",
+    "pdf-generator",
+    "form-builder",
+    "interactive-pdf",
+    "pdf-forms"
+  ],
+  "author": "Lou TIGROUDJA <lou.tigroudja07@gmail.com>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AbsolumFrAG/pdf-tailwind-forms.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AbsolumFrAG/pdf-tailwind-forms/issues"
+  },
+  "homepage": "https://github.com/AbsolumFrAG/pdf-tailwind-forms#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.12",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "pdf-lib": "^1.17.1"
+  }
+}
