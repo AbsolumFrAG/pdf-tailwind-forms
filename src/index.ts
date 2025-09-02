@@ -1,5 +1,5 @@
-export { PDFGenerator as default } from "./pdf-generator";
-export * from "./pdf-generator";
+export { PDFGenerator as default } from "./pdf-generator.js";
+export * from "./pdf-generator.js";
 
 // Re-export pour faciliter l'importation
 export {
@@ -19,4 +19,4 @@ export {
   type PDFMetadata,
   type FillData,
   type GenerationResult,
-} from "./pdf-generator";
+} from "./pdf-generator.js";
