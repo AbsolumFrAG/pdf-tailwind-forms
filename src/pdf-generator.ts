@@ -53,6 +53,8 @@ export interface BaseField {
   selector?: string;
   /** Absolute position coordinates (alternative to selector) */
   position?: Position;
+  /** Page number where field should be placed (0-indexed). If not specified, auto-detected from selector or defaults to 0 */
+  pageIndex?: number;
   /** Horizontal offset from calculated position in points */
   offsetX?: number;
   /** Vertical offset from calculated position in points */
@@ -346,13 +348,13 @@ export class PDFGenerator {
    * Converts browser pixel coordinates to PDF points (72 DPI)
    * @param page Puppeteer page instance
    * @param selector CSS selector for the target element
-   * @returns Position object or null if element not found
+   * @returns Position object with page detection or null if element not found
    * @private
    */
   private async calculateElementPosition(
     page: Page,
     selector: string
-  ): Promise<Position | null> {
+  ): Promise<Position & { pageIndex: number } | null> {
     return await page.evaluate((sel: string) => {
       const element = document.querySelector(sel);
       if (!element) return null;
@@ -360,12 +362,22 @@ export class PDFGenerator {
       const rect = element.getBoundingClientRect();
       const pdfScale = 72 / 96; // Conversion pixels vers points PDF
 
+      // Détecter la page en fonction de la position verticale
+      const pageHeight = 842; // A4 height in points (297mm * 72/25.4)
+      const elementTop = rect.top * pdfScale;
+      const pageIndex = Math.floor(elementTop / pageHeight);
+      
+      // Ajuster la position Y relative à la page courante
+      const pageRelativeY = elementTop % pageHeight;
+      const pdfY = pageHeight - (rect.bottom * pdfScale % pageHeight);
+
       return {
         x: rect.left * pdfScale,
-        y: rect.top * pdfScale,
+        y: pageRelativeY,
         width: rect.width * pdfScale,
         height: rect.height * pdfScale,
-        pdfY: (window.innerHeight - rect.bottom) * pdfScale,
+        pdfY: pdfY,
+        pageIndex: Math.max(0, pageIndex)
       };
     }, selector);
   }
@@ -638,7 +650,7 @@ export class PDFGenerator {
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Calculer les positions des champs avant de générer le PDF
-      const fieldPositions: Map<string, Position> = new Map();
+      const fieldPositions: Map<string, Position & { pageIndex: number }> = new Map();
 
       for (const field of fields) {
         if (field.selector) {
@@ -650,7 +662,9 @@ export class PDFGenerator {
             fieldPositions.set(field.name, position);
           }
         } else if (field.position) {
-          fieldPositions.set(field.name, field.position);
+          // Utiliser pageIndex du champ ou 0 par défaut
+          const pageIndex = field.pageIndex ?? 0;
+          fieldPositions.set(field.name, { ...field.position, pageIndex });
         }
       }
 
@@ -672,9 +686,8 @@ export class PDFGenerator {
 
       const form = pdfDoc.getForm();
       const pages = pdfDoc.getPages();
-      const firstPage = pages[0];
 
-      // Ajouter les champs de formulaire
+      // Ajouter les champs de formulaire avec support multipage
       let fieldCount = 0;
       for (const field of fields) {
         const position = fieldPositions.get(field.name);
@@ -684,26 +697,37 @@ export class PDFGenerator {
           continue;
         }
 
+        // Déterminer la page cible : pageIndex explicite > position détectée > page 0
+        const targetPageIndex = field.pageIndex ?? position.pageIndex ?? 0;
+        
+        // Vérifier que la page existe
+        if (targetPageIndex >= pages.length) {
+          console.warn(`Page ${targetPageIndex} not found for field ${field.name}. Using page 0.`);
+          continue;
+        }
+
+        const targetPage = pages[targetPageIndex];
+
         switch (field.type) {
           case "text":
-            this.addTextField(form, field as TextField, firstPage, position);
+            this.addTextField(form, field as TextField, targetPage, position);
             break;
           case "checkbox":
             this.addCheckboxField(
               form,
               field as CheckboxField,
-              firstPage,
+              targetPage,
               position
             );
             break;
           case "radio":
-            this.addRadioField(form, field as RadioField, firstPage, position);
+            this.addRadioField(form, field as RadioField, targetPage, position);
             break;
           case "dropdown":
             this.addDropdownField(
               form,
               field as DropdownField,
-              firstPage,
+              targetPage,
               position
             );
             break;
@@ -711,7 +735,7 @@ export class PDFGenerator {
             this.addButtonField(
               form,
               field as ButtonField,
-              firstPage,
+              targetPage,
               position
             );
             break;
@@ -719,7 +743,7 @@ export class PDFGenerator {
             this.addSignatureField(
               form,
               field as SignatureField,
-              firstPage,
+              targetPage,
               position
             );
             break;
