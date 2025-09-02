@@ -1,6 +1,6 @@
 {
   "name": "pdf-tailwind-forms",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "TypeScript Node.js library for generating PDFs with AcroForms and TailwindCSS support",
   "type": "module",
   "main": "dist/index.js",
