@@ -1,18 +1,19 @@
-# PDF-TailwindForms
+# PDF TailwindCSS Forms
 
-A powerful TypeScript Node.js library for generating PDFs with complete AcroForms fields and TailwindCSS support.
+A powerful TypeScript library for generating interactive PDF documents with TailwindCSS styling and AcroForm fields.
 
-## 🚀 Features
+## Features
 
-- **Complete AcroForms Support**: All field types (text, checkboxes, radio buttons, dropdowns, etc.)
-- **TailwindCSS Integration**: Style your forms with Tailwind CSS classes
-- **TypeScript Types**: Full TypeScript support with strict typing
-- **Field Validation**: Built-in validation system with customizable rules
-- **Conditional Logic**: Dynamic fields with show/hide conditions
-- **Utility Helpers**: Tools for creating layouts, tables, signatures, etc.
-- **Custom Themes**: Theme system with customizable colors and styles
+- <� **TailwindCSS Integration** - Style your PDFs with modern CSS framework
+- =� **Interactive Forms** - Add text fields, checkboxes, dropdowns, and more
+- =' **TypeScript Support** - Full type safety and IntelliSense
+- =� **Template System** - Pre-built templates for common use cases
+- � **Dual Positioning** - CSS selectors or absolute coordinates
+- = **Form Validation** - Built-in validation for configurations
+- =� **Batch Processing** - Generate multiple PDFs efficiently
+- =� **Data Extraction** - Extract data from existing PDF forms
 
-## 📦 Installation
+## Installation
 
 ```bash
 npm install pdf-tailwind-forms
@@ -22,439 +23,457 @@ pnpm add pdf-tailwind-forms
 yarn add pdf-tailwind-forms
 ```
 
-## 🎯 Quick Start
+## Quick Start
 
 ```typescript
-import { PDFTailwindGenerator, FormHelpers } from 'pdf-tailwind-forms';
+import PDFGenerator from 'pdf-tailwind-forms';
 
-async function createForm() {
-  // Initialize PDF generator
-  const pdfGenerator = new PDFTailwindGenerator();
-  await pdfGenerator.initialize({
-    title: 'My Form',
-    author: 'Your Name'
-  });
+const generator = new PDFGenerator();
 
-  // Add a page
-  pdfGenerator.addPage();
-
-  // Create a text field with TailwindCSS styling
-  await pdfGenerator.addTextField({
-    name: 'full_name',
-    x: 50,
-    y: 700,
-    width: 200,
-    height: 30,
-    defaultValue: '',
-    tailwind: { 
-      classes: 'bg-white border-2 border-blue-300 text-gray-900 text-sm rounded-md p-2' 
+// Simple example
+const config = {
+  content: `
+    <div class="p-8 max-w-md mx-auto bg-white rounded-xl shadow-lg">
+      <h1 class="text-2xl font-bold mb-4">Contact Form</h1>
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">Name</label>
+        <div class="name-field border p-2 rounded w-full h-10"></div>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">Email</label>
+        <div class="email-field border p-2 rounded w-full h-10"></div>
+      </div>
+    </div>
+  `,
+  fields: [
+    {
+      name: 'fullName',
+      type: 'text',
+      selector: '.name-field',
+      required: true
+    },
+    {
+      name: 'email',
+      type: 'text',
+      selector: '.email-field',
+      required: true
     }
-  });
+  ],
+  outputPath: './contact-form.pdf'
+};
 
-  // Save the PDF
-  const pdfBytes = await pdfGenerator.save();
-  // Use pdfBytes to save or send the PDF
+const result = await generator.generate(config);
+console.log(`Generated PDF with ${result.fieldCount} fields`);
+
+// Clean up
+await generator.destroy();
+```
+
+## Core Concepts
+
+### Two-Step Generation Process
+
+This library uses a unique two-step approach:
+
+1. **Visual Layer**: Puppeteer renders your HTML content with TailwindCSS to create a styled PDF
+2. **Interactive Layer**: pdf-lib adds AcroForm fields at calculated positions
+
+This separation allows you to focus on design with TailwindCSS while getting fully interactive forms.
+
+### Field Positioning
+
+Fields can be positioned using two methods:
+
+#### CSS Selectors (Recommended)
+```typescript
+{
+  name: 'userName',
+  type: 'text',
+  selector: '.user-input-field',  // Automatically calculates position
+  offsetX: 5,  // Fine-tune position
+  offsetY: -2
 }
 ```
 
-## 🛠️ Supported Field Types
-
-### Basic Fields
-
-#### Text Field
+#### Absolute Positioning
 ```typescript
-await pdfGenerator.addTextField({
-  name: 'email',
-  x: 50,
-  y: 650,
-  width: 250,
-  height: 25,
-  multiline: false,
-  maxLength: 100,
-  tailwind: { classes: 'bg-white border border-gray-300 rounded p-2' }
-});
+{
+  name: 'userName',
+  type: 'text',
+  position: { x: 100, y: 200, width: 200, height: 30 }
+}
 ```
 
-#### Checkbox
+## Field Types
+
+### Text Fields
 ```typescript
-await pdfGenerator.addCheckBox({
-  name: 'newsletter',
-  x: 50,
-  y: 600,
-  width: 15,
-  height: 15,
-  checked: false,
-  tailwind: { classes: 'border-2 border-green-400' }
-});
+{
+  name: 'description',
+  type: 'text',
+  selector: '.description-field',
+  multiline: true,
+  maxLength: 500,
+  defaultValue: 'Enter description...',
+  required: true
+}
 ```
 
-#### Radio Group
+### Checkboxes
 ```typescript
-await pdfGenerator.addRadioGroup({
-  name: 'title',
+{
+  name: 'agreeTerms',
+  type: 'checkbox',
+  selector: '.terms-checkbox',
+  defaultValue: false,
+  size: 16,
+  required: true
+}
+```
+
+### Radio Buttons
+```typescript
+{
+  name: 'priority',
+  type: 'radio',
+  selector: '.priority-group',
   options: [
-    { value: 'mr', x: 50, y: 550, width: 15, height: 15 },
-    { value: 'mrs', x: 100, y: 550, width: 15, height: 15 },
-    { value: 'ms', x: 150, y: 550, width: 15, height: 15 }
+    { value: 'low', label: 'Low Priority' },
+    { value: 'medium', label: 'Medium Priority' },
+    { value: 'high', label: 'High Priority' }
   ],
-  defaultValue: 'mr',
-  tailwind: { classes: 'border-2 border-blue-400' }
-});
+  defaultValue: 'medium',
+  spacing: 25
+}
 ```
 
-#### Dropdown
+### Dropdowns
 ```typescript
-await pdfGenerator.addDropdown({
+{
   name: 'country',
-  x: 50,
-  y: 500,
-  width: 150,
-  height: 25,
-  options: ['France', 'Belgium', 'Switzerland', 'Canada'],
-  defaultValue: 'France',
-  tailwind: { classes: 'bg-white border border-gray-300 rounded p-1' }
-});
+  type: 'dropdown',
+  selector: '.country-select',
+  options: ['United States', 'Canada', 'Mexico'],
+  defaultValue: 'United States',
+  editable: false
+}
 ```
 
-### Advanced Fields with FormHelpers
-
-#### Date Field with Validation
+### Buttons
 ```typescript
-const formHelpers = new FormHelpers(pdfGenerator);
-
-await formHelpers.createDateField({
-  name: 'birth_date',
-  x: 50,
-  y: 450,
-  width: 120,
-  height: 25,
-  format: 'DD/MM/YYYY',
-  maxDate: new Date(), // Don't allow future dates
-  tailwind: { classes: 'bg-white border border-gray-300 rounded p-2' }
-});
+{
+  name: 'submitForm',
+  type: 'button',
+  selector: '.submit-btn',
+  label: 'Submit Form',
+  action: 'submit'
+}
 ```
 
-#### Number Field with Validation
+### Signature Fields
 ```typescript
-await formHelpers.createNumberField({
-  name: 'salary',
-  x: 50,
-  y: 400,
-  width: 120,
-  height: 25,
-  min: 20000,
-  max: 200000,
-  tailwind: { classes: 'bg-white border border-gray-300 rounded p-2 text-right' }
-});
+{
+  name: 'clientSignature',
+  type: 'signature',
+  selector: '.signature-area',
+  height: 60
+}
 ```
 
-#### Signature Field
+## Template System
+
+### Form Template
 ```typescript
-await formHelpers.createSignatureField({
-  name: 'signature',
-  x: 50,
-  y: 350,
-  width: 200,
-  height: 50,
-  required: true,
-  tailwind: { classes: 'border-2 border-gray-400 bg-gray-50' }
+import { createFormTemplate } from 'pdf-tailwind-forms/templates/form';
+
+const formConfig = createFormTemplate({
+  title: 'Customer Registration',
+  description: 'Please fill out all required fields',
+  theme: 'blue',
+  fields: [
+    { label: 'Full Name', name: 'fullName', type: 'text', required: true },
+    { label: 'Email Address', name: 'email', type: 'email', required: true },
+    { label: 'Phone Number', name: 'phone', type: 'phone' },
+    { label: 'Country', name: 'country', type: 'select', 
+      options: ['US', 'CA', 'UK', 'DE', 'FR'] },
+    { label: 'Comments', name: 'comments', type: 'textarea' },
+    { label: 'Subscribe to newsletter', name: 'newsletter', type: 'checkbox' }
+  ],
+  submitLabel: 'Register Now'
 });
+
+const generator = new PDFGenerator();
+const result = await generator.generate(formConfig);
 ```
 
-## 🎨 TailwindCSS Styles
-
-The library automatically converts TailwindCSS classes to PDF styles:
-
-### Supported Colors
-- Base colors: `bg-white`, `bg-black`, `text-red-500`, `border-blue-300`
-- Full Tailwind color range (50-900) for: red, blue, green, yellow, purple, gray
-
-### Sizes and Spacing
-- Text sizes: `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, etc.
-- Borders: `border`, `border-2`, `border-4`, `border-8`
-- Border radius: `rounded`, `rounded-md`, `rounded-lg`, `rounded-full`
-- Padding/Margin: `p-2`, `px-4`, `py-2`, `m-4`, etc.
-
-### Text Styles
-- Alignment: `text-left`, `text-center`, `text-right`
-- Weight: `font-normal`, `font-bold`
-- Style: `italic`, `not-italic`
-- Decoration: `underline`, `line-through`, `no-underline`
-
-### Complete Example with Styles
+### Invoice Template
 ```typescript
-await pdfGenerator.addTextField({
-  name: 'styled_field',
-  x: 50,
-  y: 300,
-  width: 200,
-  height: 30,
-  tailwind: { 
-    classes: 'bg-blue-50 border-2 border-blue-300 text-blue-800 text-lg rounded-lg p-3 font-bold' 
+import { createInvoiceTemplate } from 'pdf-tailwind-forms/templates/invoice';
+
+const invoiceConfig = createInvoiceTemplate({
+  companyName: 'Acme Corporation',
+  companyAddress: '123 Business Street\nSuite 100\nNew York, NY 10001',
+  clientName: 'Client Company Inc.',
+  clientAddress: '456 Client Avenue\nSuite 200\nBoston, MA 02101',
+  invoiceNumber: 'INV-2024-001',
+  date: '2024-01-15',
+  dueDate: '2024-02-15',
+  items: [
+    { description: 'Web Development Services', quantity: 40, price: 125.00 },
+    { description: 'Domain Registration', quantity: 1, price: 15.99 },
+    { description: 'SSL Certificate', quantity: 1, price: 89.00 }
+  ],
+  tax: 8.5,
+  currency: '$'
+});
+
+const generator = new PDFGenerator();
+const result = await generator.generate(invoiceConfig);
+```
+
+## Advanced Features
+
+### Custom Styling
+```typescript
+const config = {
+  content: '<div class="custom-form">...</div>',
+  customCSS: `
+    .custom-form {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: 'Inter', sans-serif;
+    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+  `,
+  fields: [...],
+  pdfOptions: {
+    format: 'A4',
+    margin: { top: '20mm', right: '15mm', bottom: '20mm', left: '15mm' },
+    displayHeaderFooter: true,
+    headerTemplate: '<div class="text-xs text-center w-full">Company Name</div>',
+    footerTemplate: '<div class="text-xs text-center w-full">Page <span class="pageNumber"></span></div>'
+  }
+};
+```
+
+### Configuration Validation
+```typescript
+import { PDFValidator } from 'pdf-tailwind-forms/validator';
+
+const validator = new PDFValidator();
+const validation = validator.validate(config);
+
+if (!validation.valid) {
+  console.error('Configuration errors:', validation.errors);
+  return;
+}
+```
+
+### Working with Existing PDFs
+```typescript
+// Fill an existing PDF form
+const filledPDF = await generator.fillExistingPDF(
+  './template.pdf',
+  {
+    fullName: 'John Doe',
+    email: 'john@example.com',
+    agreeTerms: true
+  },
+  './filled-form.pdf'
+);
+
+// Extract data from a PDF
+const formData = await generator.extractFormData('./submitted-form.pdf');
+console.log(formData); // { fullName: 'John Doe', email: 'john@example.com', ... }
+```
+
+### Batch Processing
+```typescript
+const configs = [
+  { content: '<div>Form 1</div>', fields: [], outputPath: './form1.pdf' },
+  { content: '<div>Form 2</div>', fields: [], outputPath: './form2.pdf' },
+  { content: '<div>Form 3</div>', fields: [], outputPath: './form3.pdf' }
+];
+
+const results = await generator.generateBatch(configs);
+console.log(`Generated ${results.length} PDFs`);
+```
+
+## Configuration Options
+
+### PDFGeneratorOptions
+```typescript
+const generator = new PDFGenerator({
+  tailwindCDN: 'https://cdn.tailwindcss.com',  // Custom TailwindCSS CDN
+  defaultFontSize: 12,                         // Default field font size
+  defaultBorderWidth: 1,                       // Default field border width
+  puppeteerOptions: {                          // Puppeteer configuration
+    headless: true,
+    args: ['--no-sandbox']
   }
 });
 ```
 
-## 🔧 Advanced Utilities
-
-### Multi-column Layout
+### PDF Metadata
 ```typescript
-const formHelpers = new FormHelpers(pdfGenerator);
-
-// Calculate column positions
-const { columnWidth, columnPositions } = formHelpers.calculateColumnLayout(595.28, 2, 50);
-
-// Use calculated positions
-await pdfGenerator.addTextField({
-  name: 'first_name',
-  x: columnPositions[0],
-  y: 250,
-  width: columnWidth,
-  height: 25
-});
+const config = {
+  content: '...',
+  fields: [...],
+  metadata: {
+    title: 'Customer Registration Form',
+    author: 'Your Company',
+    subject: 'Registration',
+    keywords: ['form', 'registration', 'customer'],
+    creator: 'PDF TailwindCSS Forms Library'
+  }
+};
 ```
 
-### Form Sections
+## Error Handling
+
+The library provides comprehensive error handling:
+
 ```typescript
-formHelpers.createFormSection(
-  'Personal Information', 
-  'Please fill in your personal details',
-  50,   // x
-  200,  // y  
-  500   // width
-);
-```
-
-### Dynamic Tables
-```typescript
-await formHelpers.createTable({
-  x: 50,
-  y: 150,
-  rows: 4,
-  columns: 3,
-  cellWidth: 100,
-  cellHeight: 30,
-  headers: ['Name', 'First Name', 'Email'],
-  data: [
-    ['Doe', 'John', 'john@email.com'],
-    ['Smith', 'Jane', 'jane@email.com']
-  ],
-  borderColor: rgb(0.5, 0.5, 0.5),
-  borderWidth: 1
-});
-```
-
-## 🔐 Field Validation
-
-### Supported Validation Rules
-```typescript
-// Required validation
-pdfGenerator.setFieldValidation('name', {
-  rules: [{ type: 'required', message: 'Name is required' }],
-  validateOnBlur: true
-});
-
-// Pattern validation with regex
-pdfGenerator.setFieldValidation('email', {
-  rules: [{
-    type: 'pattern',
-    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    message: 'Invalid email format'
-  }]
-});
-
-// Custom validation
-pdfGenerator.setFieldValidation('age', {
-  rules: [{
-    type: 'custom',
-    message: 'Age must be between 18 and 65',
-    customValidator: (value) => {
-      const age = parseInt(value);
-      return age >= 18 && age <= 65;
-    }
-  }]
-});
-```
-
-## 🎭 Themes and Customization
-
-### Define a Custom Theme
-```typescript
-import { rgb } from 'pdf-tailwind-forms';
-
-pdfGenerator.setTheme({
-  primaryColor: rgb(0.2, 0.4, 0.8),
-  secondaryColor: rgb(0.5, 0.5, 0.5),
-  fontSize: 12,
-  borderRadius: 4,
-  fieldSpacing: 10,
-  errorColor: rgb(0.8, 0.2, 0.2),
-  successColor: rgb(0.2, 0.8, 0.2)
-});
-```
-
-### Custom Colors
-```typescript
-// Add a custom color
-const styleConverter = new TailwindToPDFConverter();
-styleConverter.addCustomColor('brand-primary', 51, 102, 204); // RGB
-```
-
-## 📚 Complete Examples
-
-### Simple Contact Form
-```typescript
-import { PDFTailwindGenerator, FormHelpers } from 'pdf-tailwind-forms';
-import * as fs from 'fs';
-
-async function createContactForm() {
-  const pdfGenerator = new PDFTailwindGenerator();
-  await pdfGenerator.initialize({
-    title: 'Contact Form',
-    author: 'My Application'
-  });
-
-  const formHelpers = new FormHelpers(pdfGenerator);
-  pdfGenerator.addPage();
-
-  let y = 750;
-
-  // Header
-  pdfGenerator.drawText('Contact Form', 50, y, {
-    size: 20,
-    tailwind: 'font-bold text-blue-600'
-  });
-
-  y -= 50;
-
-  // Full name
-  formHelpers.addFieldLabel('Full Name', 50, y, 'name', true);
-  await pdfGenerator.addTextField({
-    name: 'name',
-    x: 50,
-    y: y - 25,
-    width: 200,
-    height: 25,
-    tailwind: { classes: 'bg-white border-2 border-blue-300 text-gray-900 text-sm rounded p-2' }
-  });
-
-  y -= 70;
-
-  // Email
-  formHelpers.addFieldLabel('Email', 50, y, 'email', true);
-  await pdfGenerator.addTextField({
-    name: 'email',
-    x: 50,
-    y: y - 25,
-    width: 250,
-    height: 25,
-    tailwind: { classes: 'bg-white border-2 border-blue-300 text-gray-900 text-sm rounded p-2' }
-  });
-
-  y -= 70;
-
-  // Message
-  formHelpers.addFieldLabel('Message', 50, y, 'message');
-  await pdfGenerator.addTextField({
-    name: 'message',
-    x: 50,
-    y: y - 80,
-    width: 300,
-    height: 60,
-    multiline: true,
-    tailwind: { classes: 'bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded p-2' }
-  });
-
-  y -= 120;
-
-  // Submit button
-  await pdfGenerator.addButton({
-    name: 'submit',
-    label: 'Submit',
-    x: 50,
-    y: y,
-    width: 100,
-    height: 30,
-    tailwind: { classes: 'bg-green-600 text-white font-bold rounded border-2 border-green-700' }
-  });
-
-  // Validation
-  pdfGenerator.setFieldValidation('name', {
-    rules: [{ type: 'required', message: 'Name is required' }]
-  });
-
-  pdfGenerator.setFieldValidation('email', {
-    rules: [
-      { type: 'required', message: 'Email is required' },
-      { type: 'pattern', value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: 'Invalid email format' }
-    ]
-  });
-
-  // Save
-  const pdfBytes = await pdfGenerator.save();
-  fs.writeFileSync('contact-form.pdf', pdfBytes);
-  
-  console.log('Form created successfully!');
+try {
+  const result = await generator.generate(config);
+  console.log('Success:', result);
+} catch (error) {
+  if (error.message.includes('selector not found')) {
+    console.error('CSS selector invalid:', error);
+  } else if (error.message.includes('validation')) {
+    console.error('Configuration error:', error);
+  } else {
+    console.error('Generation failed:', error);
+  }
 }
-
-createContactForm().catch(console.error);
 ```
 
-## 🔧 API Reference
+## Best Practices
 
-### PDFTailwindGenerator
+### 1. Resource Management
+```typescript
+// Always clean up resources
+const generator = new PDFGenerator();
+try {
+  const result = await generator.generate(config);
+  // Process result
+} finally {
+  await generator.destroy(); // Important: prevents memory leaks
+}
+```
 
-#### Main Methods
-- `initialize(config?: PDFGeneratorConfig)` - Initialize the generator
-- `addPage(options?: PageOptions)` - Add a new page
-- `addTextField(options: TextFieldOptions)` - Add a text field
-- `addCheckBox(options: CheckBoxOptions)` - Add a checkbox
-- `addRadioGroup(options: RadioGroupOptions)` - Add a radio group
-- `addDropdown(options: DropdownOptions)` - Add a dropdown
-- `addOptionList(options: ListBoxOptions)` - Add a list box
-- `addButton(options: ButtonOptions)` - Add a button
-- `setTheme(theme: Partial<FormTheme>)` - Set the theme
-- `save()` - Save the PDF and return bytes
+### 2. Field Positioning
+```typescript
+// Use descriptive CSS classes
+const content = `
+  <div class="form-container p-8">
+    <div class="user-name-input border rounded p-2"></div>
+    <div class="user-email-input border rounded p-2 mt-4"></div>
+  </div>
+`;
 
-### FormHelpers
+const fields = [
+  { name: 'userName', type: 'text', selector: '.user-name-input' },
+  { name: 'userEmail', type: 'text', selector: '.user-email-input' }
+];
+```
 
-#### Utility Methods
-- `createDateField(options: DateFieldOptions)` - Create a date field with validation
-- `createNumberField(options: NumberFieldOptions)` - Create a number field with validation
-- `createSignatureField(options: SignatureFieldOptions)` - Create a signature field
-- `createTable(options: TableFieldOptions)` - Create a table
-- `createFormSection(title, description, x, y, width)` - Create a form section
-- `calculateColumnLayout(pageWidth, columns, margin)` - Calculate multi-column layout
-- `addFieldLabel(text, x, y, fieldName, required)` - Add a field label
+### 3. Responsive Design
+```typescript
+// Use TailwindCSS responsive utilities
+const content = `
+  <div class="p-4 md:p-8 max-w-2xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="name-field h-10 border rounded"></div>
+      <div class="email-field h-10 border rounded"></div>
+    </div>
+  </div>
+`;
+```
 
-## 🤝 Contributing
+### 4. Validation
+```typescript
+// Always validate before generation
+const validator = new PDFValidator();
+const validation = validator.validate(config);
 
-Contributions are welcome! To contribute:
+if (!validation.valid) {
+  throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
+}
+```
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add: AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## Performance Considerations
 
-## 📄 License
+- **Reuse Generator Instances**: Create one generator and reuse it for multiple PDFs
+- **Batch Operations**: Use `generateBatch()` for multiple PDFs instead of individual calls
+- **Resource Cleanup**: Always call `destroy()` when done to prevent memory leaks
+- **Selector Efficiency**: Use specific CSS selectors to improve positioning accuracy
 
-This project is licensed under the ISC License. See the [LICENSE](LICENSE) file for details.
+## Browser Compatibility
 
-## 🙏 Acknowledgments
+The library uses Puppeteer which supports:
+- Chrome/Chromium (recommended)
+- All modern CSS features including Flexbox and Grid
+- TailwindCSS responsive utilities
+- Custom fonts via CSS imports
 
-- [pdf-lib](https://pdf-lib.js.org/) - The underlying PDF library
-- [TailwindCSS](https://tailwindcss.com/) - The utility-first CSS framework
-- Open source community for inspiration and feedback
+## TypeScript Support
 
-## 📞 Support
+The library is written in TypeScript and provides complete type definitions:
 
-If you have questions or need help:
+```typescript
+import PDFGenerator, { 
+  GenerateConfig, 
+  FormField, 
+  TextField,
+  CheckboxField,
+  PDFMetadata,
+  GenerationResult 
+} from 'pdf-tailwind-forms';
 
-1. Check the [documentation](README.md)
-2. Search through [existing issues](https://github.com/AbsolumFrAG/pdf-tailwind-forms/issues)
-3. Create a [new issue](https://github.com/AbsolumFrAG/pdf-tailwind-forms/issues/new) if needed
+// Full type safety
+const config: GenerateConfig = {
+  content: '...',
+  fields: [] as FormField[],
+  metadata: {} as PDFMetadata
+};
+```
 
----
+## Examples
 
-**PDF-TailwindForms** - Create beautiful PDF forms with the power of TailwindCSS! 🚀
+See the `/examples` directory for complete working examples:
+
+- **Simple Form**: Basic contact form with validation
+- **Multi-page Form**: Complex form spanning multiple pages
+- **Invoice Generation**: Professional invoice with calculations
+- **Spacing Demo**: Field positioning and spacing examples
+
+## Requirements
+
+- Node.js e 18.0.0
+- Dependencies automatically installed:
+  - `pdf-lib` ^1.17.1
+  - `puppeteer` ^24.18.0
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build the library
+pnpm run build
+
+# Run tests
+pnpm run test
+
+# Watch mode development
+pnpm run dev
+```
+
+## License
+
+ISC
+
+## Contributing
+
+Issues and pull requests welcome on [GitHub](https://github.com/AbsolumFrAG/pdf-tailwind-forms).

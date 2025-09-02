@@ -1,22 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "es2022",
-    "lib": ["es2022", "dom"],
-    "types": ["node", "vitest/globals"],
-    "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "rootDir": "./",
-    "moduleResolution": "nodenext"
+    "types": ["jest", "node"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
-  "include": [
-    "src/**/*",
-    "tests/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "examples"
-  ]
+  "include": ["src/**/*", "src/__tests__/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
